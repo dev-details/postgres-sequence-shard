@@ -24,32 +24,42 @@ It compares the performance of using a auto-incrementing `SERIAL`
 column against several methods of using a sharded sequence approach 
 including:
 
+- `serial w/ trigger` - Same as `serial` but has an on-insert trigger to determine the impact of a trigger.
 - `trigger` - Get an ID inside an on-insert trigger.
 - `cte` - Get 20 IDs in a CTE and use them when inserting documents.
 - `inline` - Calling the `nextval` function to get an ID within a SQL query.
 
 ## Results
 
-100,000 iterations on a MacBook M1 with 64GB of RAM. 
-See `docker-compose.yml` for DB container memory and CPU limits.
+100,000 iterations with 20 items each. 
 
-| Test    | Inserts Per Second |    avg |   p(90) |  p(95) |
-|---------|-------------------:|-------:|--------:|-------:|
-| serial  |           15283.26 | 2.63ms |   4.7ms |  5.6ms |
-| cte     |           11485.72 | 3.21ms |  5.65ms | 6.92ms |
-| trigger |           11146.22 | 3.83ms |  7.05ms | 8.18ms |
-| inline  |            6383.83 | 7.18ms | 12.32ms | 14.6ms |
+Run on a MacBook Pro M1 Max with 64GB of RAM. See `docker-compose.yml` 
+for DB container memory and CPU limits.
 
+| Test              | Iterations Per Second |    avg |   p(90) |  p(95) |
+|-------------------|----------------------:|-------:|--------:|-------:|
+| serial            |              15283.26 | 2.63ms |   4.7ms |  5.6ms |
+| serial w/ trigger |              13104.29 | 3.19ms |   5.7ms | 6.72ms |
+| cte               |              13411.31 | 3.09ms |  5.42ms | 6.44ms |
+| trigger           |              12536.95 | 3.36ms |  5.96ms | 6.95ms |
+| inline            |               6383.83 | 7.18ms | 12.32ms | 14.6ms |
 
 `serial` is fastest, but that's no surprise since it is the simplest. 
 However, for this use case, `serial` will not work because 32-bit IDs 
 will be exhausted.
 
-`cte` is next best, but it requires changes to the application to make
-complex queries. This likely gets its speed boost because the DB
-function to get the sequence shard is only called once for all 20 inserts.
+`serial w/ trigger` shows that simply having an on-insert trigger affects
+performance.
 
-`trigger` is only ~70% the speed of `serial`. However, it is the easiest
+`cte` is next best, but it requires changes to the application to make
+complex queries. Notably, it's as fast as `serial w/ trigger`, which
+indicates that getting a sharded sequence ID isn't inherently slower.
+This likely gets its speed boost because the DB function to get the 
+sequence shard is only called once for all 20 inserts.
+
+`trigger` is only ~82% the speed of `serial`. Notably, it's ~95% the
+speed of `serial w/ trigger` which indicates most of the performance
+loss is from the trigger itself. However, it is the easiest
 to implement because it doesn't require changes to the insert queries.
 
 `inline` is the slowest, likely because the DB function is called 40 times

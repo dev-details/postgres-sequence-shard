@@ -24,4 +24,4 @@ test *test_name: build
 
 
 test-all:
-  just test serial cte trigger inline
+  just test serial serial_with_trigger cte trigger inline

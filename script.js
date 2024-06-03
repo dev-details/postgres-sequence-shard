@@ -33,6 +33,29 @@ export function setup() {
       );
     `);
   }
+  else if ( __ENV.TEST_NAME === "serial_with_trigger" ) {
+    db.exec(`
+      SET search_path TO "k6-run";
+      CREATE TABLE item
+      (
+        id          SERIAL,
+        document_id integer,
+        value       varchar(32),
+        constraint item_pk
+          primary key (document_id, id)
+      );
+      
+        CREATE FUNCTION set_id() RETURNS trigger AS $$
+            BEGIN
+                NEW.value := 'serial_with_trigger';
+                RETURN NEW;
+            END;
+        $$ LANGUAGE plpgsql;  
+        
+        CREATE TRIGGER set_id BEFORE INSERT ON item
+          FOR EACH ROW EXECUTE FUNCTION set_id();      
+    `);
+  }
   else {
     db.exec(`
       SET search_path TO "k6-run";
@@ -50,7 +73,7 @@ export function setup() {
           LANGUAGE sql IMMUTABLE
       AS
       $$
-      SELECT format('S_Item_%s', TO_CHAR(abs(hashint4(documentId) % 10), 'fm000'));
+      SELECT 'S_Item_' || LPAD(abs(hashint4(documentId) % 10)::text, 3, '0');
       $$;
   
       CREATE SEQUENCE S_Item_000 AS integer NO CYCLE OWNED BY item.id;
@@ -195,6 +218,8 @@ tests.serial = function() {
     COMMIT;
   `);
 }
+
+tests.serial_with_trigger = tests.serial;
 
 if (tests[__ENV.TEST_NAME] === undefined ) {
   exec.test.abort(`Invalid test name: "${__ENV.TEST_NAME}"`);
