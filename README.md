@@ -1,6 +1,6 @@
 # Postgres Sequence Shard
 
-Benchmark testing for using sharded sequences in Postgres.
+Bench testing for using sharded sequences in Postgres.
 
 Testing is done with [k6](https://k6.io/) and 
 [xk6-sql](https://github.com/grafana/xk6-sql). K6 and Postgres
