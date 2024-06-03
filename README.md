@@ -30,14 +30,15 @@ including:
 
 ## Results
 
-10000 iterations on a MacBook M1 with 64GB of RAM
+100,000 iterations on a MacBook M1 with 64GB of RAM. 
+See `docker-compose.yml` for DB container memory and CPU limits.
 
-| Test    | Inserts Per Second |
-|---------|--------------------|
-| serial  | 10814.284043       |
-| cte     | 9748.555498        |
-| trigger | 8087.128569        |
-| inline  | 5240.629735        |
+| Test    | Inserts Per Second |    avg |   p(90) |  p(95) |
+|---------|-------------------:|-------:|--------:|-------:|
+| serial  |           15283.26 | 2.63ms |   4.7ms |  5.6ms |
+| cte     |           11485.72 | 3.21ms |  5.65ms | 6.92ms |
+| trigger |           11146.22 | 3.83ms |  7.05ms | 8.18ms |
+| inline  |            6383.83 | 7.18ms | 12.32ms | 14.6ms |
 
 
 `serial` is fastest, but that's no surprise since it is the simplest. 
@@ -48,7 +49,7 @@ will be exhausted.
 complex queries. This likely gets its speed boost because the DB
 function to get the sequence shard is only called once for all 20 inserts.
 
-`trigger` is only 75% the speed of `serial`. However, it is the easiest
+`trigger` is only ~70% the speed of `serial`. However, it is the easiest
 to implement because it doesn't require changes to the insert queries.
 
 `inline` is the slowest, likely because the DB function is called 40 times

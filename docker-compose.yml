@@ -5,24 +5,21 @@ services:
     image: postgres
     restart: always
     shm_size: 128mb
-    command: -c 'max_connections=200' -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
+    command: -c 'max_connections=200'
     environment:
       POSTGRES_PASSWORD: badpassword
       POSTGRES_USER: k6
       POSTGRES_DB: k6
     ports:
       - 5432:5432
-
-  adminer:
-    image: adminer
-    restart: always
-    environment:
-      ADMINER_DESIGN: dracula
-    ports:
-      - 8080:8080
-    depends_on:
-      - db
-
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 1024M
+        reservations:
+          cpus: '4.0'
+          memory: 512M
   k6:
     image: k6-runner
     restart: no
@@ -32,3 +29,11 @@ services:
     volumes:
       - "${PWD}:${PWD}"
     working_dir: "${PWD}"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 246M
+        reservations:
+          cpus: '2.0'
+          memory: 128M

@@ -5,7 +5,7 @@ import { Counter } from 'k6/metrics';
 const error_counter = new Counter('sql_errors');
 
 const MAX_SIGNED_32_INT = ((2 ** 31) - 1);
-const ITERATIONS= 10000;
+const ITERATIONS= 100000;
 const ITEMS_PER_REQUEST = 20; // Queries are hard coded so if you change this you have to change the queries
 // Increment Document IDs by this amount in order to use document
 // IDs that reach MAX_SIGNED_32_INT
